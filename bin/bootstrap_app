@@ -1,0 +1,163 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require "fileutils"
+
+APP_ROOT = File.expand_path("..", __dir__)
+TEMPLATE_ROOT = File.join(APP_ROOT, "template")
+PROFILE_MARKER = File.join(APP_ROOT, ".rails_starter_profile")
+
+PROFILES = {
+  "1" => "api",
+  "2" => "web",
+  "3" => "web_auth"
+}.freeze
+
+RENDER_ROOTS = %w[
+  .env.example
+  .github
+  .kamal
+  Dockerfile
+  Gemfile
+  Procfile.dev
+  README.md
+  Rakefile
+  app
+  bin
+  config
+  config.ru
+  db
+  lib
+  public
+  test
+].freeze
+
+RESET_ROOTS = %w[
+  .dockerignore
+  .gitattributes
+  .github
+  .gitignore
+  .kamal
+  .rubocop.yml
+  .ruby-version
+  Dockerfile
+  Gemfile
+  Gemfile.lock
+  Procfile.dev
+  README.md
+  Rakefile
+  app
+  bin
+  config
+  config.ru
+  db
+  lib
+  public
+  test
+].freeze
+
+def copy_tree(source, destination)
+  Dir.glob(File.join(source, "*"), File::FNM_DOTMATCH).each do |path|
+    next if [".", ".."].include?(File.basename(path))
+
+    target = File.join(destination, File.basename(path))
+
+    if File.directory?(path)
+      FileUtils.mkdir_p(target)
+      copy_tree(path, target)
+    else
+      FileUtils.rm_rf(target) if File.exist?(target) || File.symlink?(target)
+      FileUtils.cp_r(path, target, preserve: true)
+    end
+  end
+end
+
+def app_slug
+  File.basename(APP_ROOT).downcase.gsub(/[^a-z0-9]+/, "_").gsub(/\A_|_\z/, "")
+end
+
+def app_module
+  app_slug.split("_").map(&:capitalize).join
+end
+
+def app_title
+  app_slug.split("_").map(&:capitalize).join(" ")
+end
+
+def text_file?(path)
+  return false unless File.file?(path)
+
+  sample = File.binread(path, 1024) || ""
+  !sample.include?("\x00")
+end
+
+def render_placeholders(destination)
+  replacements = {
+    "__APP_MODULE__" => app_module,
+    "__APP_SLUG__" => app_slug,
+    "__APP_TITLE__" => app_title
+  }
+
+  RENDER_ROOTS.each do |entry|
+    path = File.join(destination, entry)
+    next unless File.exist?(path)
+
+    files = File.directory?(path) ? Dir.glob(File.join(path, "**", "*"), File::FNM_DOTMATCH) : [path]
+    files.each do |file|
+      next unless text_file?(file)
+
+      content = File.read(file)
+      next unless replacements.keys.any? { |key| content.include?(key) }
+
+      replacements.each do |key, value|
+        content = content.gsub(key, value)
+      end
+      File.write(file, content)
+    end
+  end
+end
+
+def pick_profile
+  puts "Choose a profile:"
+  puts "  1. api"
+  puts "  2. web"
+  puts "  3. web_auth"
+  print "> "
+
+  choice = $stdin.gets&.strip
+  PROFILES.fetch(choice) do
+    abort "Invalid selection."
+  end
+end
+
+Dir.chdir(APP_ROOT) do
+  abort "Project already bootstrapped for #{File.read(PROFILE_MARKER).strip}." if File.exist?(PROFILE_MARKER)
+
+  profile = pick_profile
+
+  RESET_ROOTS.each do |entry|
+    FileUtils.rm_rf(entry) if File.exist?(entry) || File.symlink?(entry)
+  end
+
+  copy_tree(File.join(TEMPLATE_ROOT, "base"), APP_ROOT)
+
+  case profile
+  when "api"
+    copy_tree(File.join(TEMPLATE_ROOT, "profiles", "api"), APP_ROOT)
+  when "web"
+    copy_tree(File.join(TEMPLATE_ROOT, "profiles", "web"), APP_ROOT)
+  when "web_auth"
+    copy_tree(File.join(TEMPLATE_ROOT, "profiles", "web"), APP_ROOT)
+    copy_tree(File.join(TEMPLATE_ROOT, "profiles", "web_auth"), APP_ROOT)
+  end
+
+  render_placeholders(APP_ROOT)
+  File.write(PROFILE_MARKER, "#{profile}\n")
+  FileUtils.rm_rf(TEMPLATE_ROOT)
+
+  puts
+  puts "Bootstrapped profile: #{profile}"
+  puts "Next steps:"
+  puts "  1. bin/setup"
+  puts "  2. bin/dev"
+end

@@ -1,0 +1,32 @@
+default: &default
+  adapter: postgresql
+  encoding: unicode
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+  url: <%= ENV["DATABASE_URL"] %>
+
+development:
+  <<: *default
+  database: <%= ENV.fetch("APP_DATABASE_NAME", "__APP_SLUG___development") %>
+
+test:
+  <<: *default
+  database: <%= ENV.fetch("APP_DATABASE_TEST_NAME", "__APP_SLUG___test") %>
+
+production:
+  primary: &primary_production
+    <<: *default
+    database: <%= ENV.fetch("APP_DATABASE_PRODUCTION_NAME", "__APP_SLUG___production") %>
+    username: <%= ENV.fetch("APP_DATABASE_USER", "__APP_SLUG__") %>
+    password: <%= ENV["APP_DATABASE_PASSWORD"] %>
+  cache:
+    <<: *primary_production
+    database: __APP_SLUG___production_cache
+    migrations_paths: db/cache_migrate
+  queue:
+    <<: *primary_production
+    database: __APP_SLUG___production_queue
+    migrations_paths: db/queue_migrate
+  cable:
+    <<: *primary_production
+    database: __APP_SLUG___production_cable
+    migrations_paths: db/cable_migrate

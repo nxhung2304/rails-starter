@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ ! -f .rails_starter_profile ]]; then
+  echo "Run bin/bootstrap_app first."
+  exit 1
+fi
+
+profile="$(cat .rails_starter_profile)"
+
+if [[ "$profile" == "web" || "$profile" == "web_auth" ]]; then
+  if bin/rails tailwindcss:build >/dev/null 2>&1; then
+    bin/rails tailwindcss:watch &
+    watcher_pid=$!
+    trap 'kill "$watcher_pid" >/dev/null 2>&1 || true' EXIT INT TERM
+  fi
+fi
+
+exec bin/rails server "$@"

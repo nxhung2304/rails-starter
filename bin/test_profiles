@@ -14,6 +14,60 @@ PROFILES = [
   { name: "web_auth", choice: "3", browser: true  }
 ].freeze
 
+# Generators to smoke-test per profile.
+# Each entry: { cmd:, files: [], absent: [] }
+GENERATOR_CHECKS = {
+  "api" => [
+    {
+      cmd:   "bundle exec rails generate model Article title:string body:text",
+      files: %w[app/models/article.rb test/models/article_test.rb test/factories/articles.rb],
+      grep:  {
+        "app/models/article.rb"            => "validates :title, presence: true",
+        "test/models/article_test.rb"      => 'context "validations"',
+        "test/models/article_test.rb"      => "should validate_presence_of(:title)",
+        "test/factories/articles.rb"       => "Faker"
+      }
+    },
+    {
+      cmd:   "bundle exec rails generate grape_api article",
+      files: %w[app/grape/api/v1/article.rb app/entities/article_entity.rb],
+      grep:  { "app/grape/api/v1/base.rb" => "API::V1::Article" }
+    }
+  ],
+  "web" => [
+    {
+      cmd:   "bundle exec rails generate model Article title:string body:text",
+      files: %w[app/models/article.rb test/models/article_test.rb test/factories/articles.rb],
+      grep:  {
+        "app/models/article.rb"            => "validates :title, presence: true",
+        "test/models/article_test.rb"      => 'context "validations"',
+        "test/models/article_test.rb"      => "should validate_presence_of(:title)",
+        "test/factories/articles.rb"       => "Faker"
+      }
+    },
+    {
+      cmd:   "bundle exec rails generate controller Articles index show",
+      files: %w[app/controllers/articles_controller.rb test/controllers/articles_controller_test.rb]
+    }
+  ],
+  "web_auth" => [
+    {
+      cmd:   "bundle exec rails generate model Article title:string body:text",
+      files: %w[app/models/article.rb test/models/article_test.rb test/factories/articles.rb],
+      grep:  {
+        "app/models/article.rb"            => "validates :title, presence: true",
+        "test/models/article_test.rb"      => 'context "validations"',
+        "test/models/article_test.rb"      => "should validate_presence_of(:title)",
+        "test/factories/articles.rb"       => "Faker"
+      }
+    },
+    {
+      cmd:   "bundle exec rails generate controller Articles index show",
+      files: %w[app/controllers/articles_controller.rb test/controllers/articles_controller_test.rb]
+    }
+  ]
+}.freeze
+
 def run(cmd, env: {}, dir: nil, input: nil)
   opts = { stdin_data: input.to_s }
   opts[:chdir] = dir if dir
@@ -35,6 +89,36 @@ def step(label)
   ok
 end
 
+def check_generators(profile_name, path, env)
+  checks = GENERATOR_CHECKS.fetch(profile_name, [])
+  return true if checks.empty?
+
+  step("5. generators") do
+    errors = []
+
+    checks.each do |check|
+      _ok, out, err = run(check[:cmd], env: env, dir: path)
+
+      check[:files].each do |rel|
+        errors << "missing #{rel} (after: #{check[:cmd]})" unless File.exist?(File.join(path, rel))
+      end
+
+      (check[:grep] || {}).each do |rel, pattern|
+        full = File.join(path, rel)
+        unless File.exist?(full) && File.read(full).include?(pattern)
+          errors << "#{rel} missing '#{pattern}' (after: #{check[:cmd]})"
+        end
+      end
+    end
+
+    if errors.empty?
+      [true, "", ""]
+    else
+      [false, errors.join("\n"), ""]
+    end
+  end
+end
+
 results = {}
 
 PROFILES.each do |profile|
@@ -50,9 +134,9 @@ PROFILES.each do |profile|
   steps = {}
 
   env = {
-    "RAILS_ENV"              => "test",
-    "DATABASE_URL"           => ENV.fetch("DATABASE_URL", "postgres://localhost"),
-    "APP_DATABASE_TEST_NAME" => "#{app}_test"
+    "RAILS_ENV"    => "test",
+    "DATABASE_URL" => ENV.fetch("DATABASE_URL", "postgres://localhost"),
+    "DB_TEST_NAME" => "#{app}_test"
   }
 
   begin
@@ -87,12 +171,14 @@ PROFILES.each do |profile|
       run("bundle exec rails test", env: env, dir: path)
     end
 
-    steps[:rubocop] = step("5. rubocop") do
+    steps[:generators] = check_generators(name, path, env)
+
+    steps[:rubocop] = step("6. rubocop") do
       run("bundle exec rubocop --no-server -f simple", env: env, dir: path)
     end
 
     if !NO_BROWSER && profile[:browser]
-      steps[:system] = step("6. rails test:system") do
+      steps[:system] = step("7. rails test:system") do
         run("bundle exec rails test:system", env: env, dir: path)
       end
     end

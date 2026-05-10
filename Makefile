@@ -1,10 +1,14 @@
-.PHONY: help bootstrap setup dev
+.PHONY: help new bootstrap setup dev
 
 help:
 	@printf "Available targets:\n"
-	@printf "  make bootstrap  # Choose and materialize a starter profile\n"
-	@printf "  make setup      # Run generated app setup after bootstrap\n"
-	@printf "  make dev        # Run generated app server after bootstrap\n"
+	@printf "  make new APP=<name>  # Create a new app from this template (preferred)\n"
+	@printf "  make bootstrap       # Bootstrap a profile into this repo (in-place)\n"
+	@printf "  make setup           # Install gems and prepare the database\n"
+	@printf "  make dev             # Start the development server\n"
+
+new:
+	@ruby bin/new $(APP)
 
 bootstrap:
 	@bin/bootstrap_app

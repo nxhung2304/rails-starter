@@ -13,7 +13,7 @@ PROFILES = {
 }.freeze
 
 RENDER_ROOTS = %w[
-  .env.example
+  .envrc.example
   .github
   .kamal
   Dockerfile
@@ -126,7 +126,7 @@ render_placeholders(app_path)
 puts "Done.\n\n"
 puts "Next steps:"
 puts "  cd #{app_path}"
-puts "  cp .env.example .env"
-puts "  # edit .env with your DATABASE_URL, REDIS_URL#{", GOOGLE_CLIENT_ID/SECRET" if profile == "web_auth"}"
+puts "  cp .envrc.example .envrc && direnv allow"
+puts "  # edit .envrc with your DATABASE_URL, REDIS_URL#{", GOOGLE_CLIENT_ID/SECRET" if profile == "web_auth"}"
 puts "  bin/setup"
 puts "  bin/dev"

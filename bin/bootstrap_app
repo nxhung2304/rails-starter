@@ -14,7 +14,7 @@ PROFILES = {
 }.freeze
 
 RENDER_ROOTS = %w[
-  .env.example
+  .envrc.example
   .github
   .kamal
   Dockerfile

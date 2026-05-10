@@ -55,7 +55,7 @@ Done.
 
 Next steps:
   cd ~/Dev/personal/todo-api
-  cp .env.example .env
+  cp .envrc.example .envrc && direnv allow
   bin/setup
   bin/dev
 ```
@@ -66,7 +66,8 @@ The app name is derived from the folder name (`todo-api` → module `TodoApi`, s
 
 ```bash
 cd ~/Dev/personal/todo-api
-cp .env.example .env        # fill in DATABASE_URL, REDIS_URL, etc.
+cp .envrc.example .envrc    # fill in DATABASE_URL, REDIS_URL, etc.
+direnv allow                # load env vars into your shell
 bin/setup                   # bundle install + db:prepare
 bin/dev                     # start server + sidekiq (+ tailwind for web profiles)
 ```
@@ -75,14 +76,14 @@ bin/dev                     # start server + sidekiq (+ tailwind for web profile
 
 **api / web**
 ```
-DATABASE_URL=postgres://localhost/todo_api_development
-REDIS_URL=redis://localhost:6379/0
+export DATABASE_URL=postgres://localhost/todo_api_development
+export REDIS_URL=redis://localhost:6379/0
 ```
 
 **web_auth** (additional)
 ```
-GOOGLE_CLIENT_ID=
-GOOGLE_CLIENT_SECRET=
+export GOOGLE_CLIENT_ID=
+export GOOGLE_CLIENT_SECRET=
 ```
 
 ## Commands Inside the Generated Project

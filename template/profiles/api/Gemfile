@@ -2,7 +2,6 @@ source "https://rubygems.org"
 
 gem "bootsnap", require: false
 gem "discard"
-gem "dotenv-rails"
 gem "grape"
 gem "grape-entity"
 gem "grape-swagger"

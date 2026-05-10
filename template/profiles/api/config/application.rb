@@ -10,5 +10,7 @@ module __APP_MODULE__
     config.autoload_lib(ignore: %w[assets tasks])
     config.api_only = true
     config.active_job.queue_adapter = :sidekiq
+    config.paths.add "app/api", eager_load: true
+    config.paths.add "app/entities", eager_load: true
   end
 end

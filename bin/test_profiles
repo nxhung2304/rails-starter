@@ -15,17 +15,16 @@ PROFILES = [
 ].freeze
 
 # Generators to smoke-test per profile.
-# Each entry: { cmd:, files: [], absent: [] }
+# Each entry: { cmd:, files: [], grep: {} }
 GENERATOR_CHECKS = {
   "api" => [
     {
-      cmd:   "bundle exec rails generate model Article title:string body:text",
+      cmd:   "bundle exec rails generate model Article title:string body:text --skip-migration --test-framework=test_unit",
       files: %w[app/models/article.rb test/models/article_test.rb test/factories/articles.rb],
       grep:  {
-        "app/models/article.rb"            => "validates :title, presence: true",
-        "test/models/article_test.rb"      => 'context "validations"',
-        "test/models/article_test.rb"      => "should validate_presence_of(:title)",
-        "test/factories/articles.rb"       => "Faker"
+        "app/models/article.rb"       => ["validates :title, presence: true"],
+        "test/models/article_test.rb" => ['context "validations"', "should validate_presence_of(:title)"],
+        "test/factories/articles.rb"  => ["Faker"]
       }
     },
     {
@@ -36,13 +35,12 @@ GENERATOR_CHECKS = {
   ],
   "web" => [
     {
-      cmd:   "bundle exec rails generate model Article title:string body:text",
+      cmd:   "bundle exec rails generate model Article title:string body:text --skip-migration --test-framework=test_unit",
       files: %w[app/models/article.rb test/models/article_test.rb test/factories/articles.rb],
       grep:  {
-        "app/models/article.rb"            => "validates :title, presence: true",
-        "test/models/article_test.rb"      => 'context "validations"',
-        "test/models/article_test.rb"      => "should validate_presence_of(:title)",
-        "test/factories/articles.rb"       => "Faker"
+        "app/models/article.rb"       => ["validates :title, presence: true"],
+        "test/models/article_test.rb" => ['context "validations"', "should validate_presence_of(:title)"],
+        "test/factories/articles.rb"  => ["Faker"]
       }
     },
     {
@@ -52,13 +50,12 @@ GENERATOR_CHECKS = {
   ],
   "web_auth" => [
     {
-      cmd:   "bundle exec rails generate model Article title:string body:text",
+      cmd:   "bundle exec rails generate model Article title:string body:text --skip-migration --test-framework=test_unit",
       files: %w[app/models/article.rb test/models/article_test.rb test/factories/articles.rb],
       grep:  {
-        "app/models/article.rb"            => "validates :title, presence: true",
-        "test/models/article_test.rb"      => 'context "validations"',
-        "test/models/article_test.rb"      => "should validate_presence_of(:title)",
-        "test/factories/articles.rb"       => "Faker"
+        "app/models/article.rb"       => ["validates :title, presence: true"],
+        "test/models/article_test.rb" => ['context "validations"', "should validate_presence_of(:title)"],
+        "test/factories/articles.rb"  => ["Faker"]
       }
     },
     {
@@ -103,9 +100,13 @@ def check_generators(profile_name, path, env)
         errors << "missing #{rel} (after: #{check[:cmd]})" unless File.exist?(File.join(path, rel))
       end
 
-      (check[:grep] || {}).each do |rel, pattern|
+      (check[:grep] || {}).each do |rel, patterns|
         full = File.join(path, rel)
-        unless File.exist?(full) && File.read(full).include?(pattern)
+        content = File.exist?(full) ? File.read(full) : ""
+
+        Array(patterns).each do |pattern|
+          next if content.include?(pattern)
+
           errors << "#{rel} missing '#{pattern}' (after: #{check[:cmd]})"
         end
       end

@@ -12,5 +12,11 @@ module __APP_MODULE__
     config.active_job.queue_adapter = :sidekiq
     config.paths.add "app/grape", eager_load: true
     config.paths.add "app/entities", eager_load: true
+
+    config.generators do |g|
+      g.orm :active_record, migration: true
+      g.test_framework :test_unit, fixture: false
+      g.fixture_replacement :factory_bot, dir: "test/factories"
+    end
   end
 end

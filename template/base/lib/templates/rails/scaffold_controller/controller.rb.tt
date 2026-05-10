@@ -78,8 +78,8 @@ class <%= class_name %>Controller < ApplicationController
     def set_<%= resource_name %>
       @<%= resource_name %> = <%= resource_class %>.find(params[:id])
     end
-<% if (actions & %w[create update]).any? -%>
 
+<% if (actions & %w[create update]).any? -%>
     def update_params
       params = <%= resource_name %>_params
       if params[:password].blank?
@@ -96,11 +96,9 @@ class <%= class_name %>Controller < ApplicationController
     end
 <% end -%>
 <% else -%>
-<% actions.each_with_index do |action, index| -%>
+<% actions.each do |action| -%>
   def <%= action %>; end
-<% unless index == actions.length - 1 -%>
 
-<% end -%>
 <% end -%>
 <% end -%>
 end

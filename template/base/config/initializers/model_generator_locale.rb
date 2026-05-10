@@ -1,9 +1,13 @@
 # frozen_string_literal: true
 
+require "rails/generators"
 require "rails/generators/active_record/model/model_generator"
 require "yaml"
+require "fileutils"
 
 ActiveRecord::Generators::ModelGenerator.class_eval do
+  source_paths.unshift Rails.root.join("lib/templates/active_record/model").to_s
+
   def update_locale
     path = Rails.root.join("config/locales/models/en.yml")
     FileUtils.mkdir_p(path.dirname)
@@ -23,7 +27,7 @@ ActiveRecord::Generators::ModelGenerator.class_eval do
     end
 
     { "en" => { "activerecord" => {
-      "models"     => { file_name => class_name.humanize },
+      "models"     => { file_name => { "one" => class_name.humanize, "other" => class_name.humanize.pluralize } },
       "attributes" => { file_name => attrs }
     } } }
   end

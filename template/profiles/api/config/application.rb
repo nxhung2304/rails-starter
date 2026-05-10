@@ -9,5 +9,6 @@ module __APP_MODULE__
     config.load_defaults 8.1
     config.autoload_lib(ignore: %w[assets tasks])
     config.api_only = true
+    config.active_job.queue_adapter = :sidekiq
   end
 end

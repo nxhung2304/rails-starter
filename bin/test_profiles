@@ -19,8 +19,8 @@ PROFILES = [
 GENERATOR_CHECKS = {
   "api" => [
     {
-      cmd:   "bundle exec rails generate model Article title:string body:text --skip-migration --test-framework=test_unit",
-      files: %w[app/models/article.rb test/models/article_test.rb test/factories/articles.rb],
+      cmd:   "bundle exec rails generate model Article title:string body:text",
+      files: %w[app/models/article.rb db/migrate test/models/article_test.rb test/factories/articles.rb],
       grep:  {
         "app/models/article.rb"       => ["validates :title, presence: true"],
         "test/models/article_test.rb" => ['context "validations"', "should validate_presence_of(:title)"],
@@ -35,8 +35,8 @@ GENERATOR_CHECKS = {
   ],
   "web" => [
     {
-      cmd:   "bundle exec rails generate model Article title:string body:text --skip-migration --test-framework=test_unit",
-      files: %w[app/models/article.rb test/models/article_test.rb test/factories/articles.rb],
+      cmd:   "bundle exec rails generate model Article title:string body:text",
+      files: %w[app/models/article.rb db/migrate test/models/article_test.rb test/factories/articles.rb],
       grep:  {
         "app/models/article.rb"       => ["validates :title, presence: true"],
         "test/models/article_test.rb" => ['context "validations"', "should validate_presence_of(:title)"],
@@ -50,8 +50,8 @@ GENERATOR_CHECKS = {
   ],
   "web_auth" => [
     {
-      cmd:   "bundle exec rails generate model Article title:string body:text --skip-migration --test-framework=test_unit",
-      files: %w[app/models/article.rb test/models/article_test.rb test/factories/articles.rb],
+      cmd:   "bundle exec rails generate model Article title:string body:text",
+      files: %w[app/models/article.rb db/migrate test/models/article_test.rb test/factories/articles.rb],
       grep:  {
         "app/models/article.rb"       => ["validates :title, presence: true"],
         "test/models/article_test.rb" => ['context "validations"', "should validate_presence_of(:title)"],
@@ -97,7 +97,9 @@ def check_generators(profile_name, path, env)
       _ok, out, err = run(check[:cmd], env: env, dir: path)
 
       check[:files].each do |rel|
-        errors << "missing #{rel} (after: #{check[:cmd]})" unless File.exist?(File.join(path, rel))
+        full = File.join(path, rel)
+        exists = File.directory?(full) ? !Dir.empty?(full) : File.exist?(full)
+        errors << "missing #{rel} (after: #{check[:cmd]})" unless exists
       end
 
       (check[:grep] || {}).each do |rel, patterns|
@@ -113,6 +115,7 @@ def check_generators(profile_name, path, env)
     end
 
     if errors.empty?
+      run("bundle exec rails db:migrate", env: env, dir: path)
       [true, "", ""]
     else
       [false, errors.join("\n"), ""]

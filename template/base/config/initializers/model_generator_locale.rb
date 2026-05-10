@@ -6,6 +6,11 @@ require "yaml"
 require "fileutils"
 
 ActiveRecord::Generators::ModelGenerator.class_eval do
+  class_option :migration, type: :boolean, default: true
+  class_option :timestamps, type: :boolean, default: true
+  class_option :test_framework, type: :string, default: "test_unit"
+  class_options[:test_framework].instance_variable_set(:@default, "test_unit")
+
   source_paths.unshift Rails.root.join("lib/templates/active_record/model").to_s
 
   def update_locale

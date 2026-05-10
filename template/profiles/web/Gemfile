@@ -1,7 +1,6 @@
 source "https://rubygems.org"
 
 gem "bootsnap", require: false
-gem "caxlsx"
 gem "discard"
 gem "dotenv-rails"
 gem "image_processing", "~> 1.2"

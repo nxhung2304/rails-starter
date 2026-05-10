@@ -51,8 +51,12 @@ def app_slug(dir)
   File.basename(dir).downcase.gsub(/[^a-z0-9]+/, "_").gsub(/\A_|_\z/, "")
 end
 
-def app_module(dir) = app_slug(dir).split("_").map(&:capitalize).join
-def app_title(dir)  = app_slug(dir).split("_").map(&:capitalize).join(" ")
+def app_module(dir)
+  app_slug(dir).split("_").map(&:capitalize).join
+end
+def app_title(dir)
+  app_slug(dir).split("_").map(&:capitalize).join(" ")
+end
 
 def text_file?(path)
   return false unless File.file?(path)

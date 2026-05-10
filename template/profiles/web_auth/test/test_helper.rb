@@ -4,8 +4,6 @@ require "rails/test_help"
 require "factory_bot_rails"
 require "shoulda/matchers"
 
-OmniAuth.config.test_mode = true
-
 module ActiveSupport
   class TestCase
     parallelize(workers: :number_of_processors)

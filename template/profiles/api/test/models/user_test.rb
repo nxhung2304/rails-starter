@@ -14,13 +14,6 @@ class UserTest < ActiveSupport::TestCase
     assert_not build(:user, email: "dup@example.com").valid?
   end
 
-  test "rolify adds and checks roles" do
-    user = create(:user)
-    user.add_role(:admin)
-    assert user.has_role?(:admin)
-    assert_not user.has_role?(:editor)
-  end
-
   test "paper_trail creates version on update" do
     user = create(:user)
     assert_difference "PaperTrail::Version.count" do

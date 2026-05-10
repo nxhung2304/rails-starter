@@ -6,18 +6,18 @@ default: &default
 
 development:
   <<: *default
-  database: <%= ENV.fetch("APP_DATABASE_NAME", "__APP_SLUG___development") %>
+  database: <%= ENV.fetch("DB_NAME", "__APP_SLUG___development") %>
 
 test:
   <<: *default
-  database: <%= ENV.fetch("APP_DATABASE_TEST_NAME", "__APP_SLUG___test") %>
+  database: <%= ENV.fetch("DB_TEST_NAME", "__APP_SLUG___test") %>
 
 production:
   primary: &primary_production
     <<: *default
-    database: <%= ENV.fetch("APP_DATABASE_PRODUCTION_NAME", "__APP_SLUG___production") %>
-    username: <%= ENV.fetch("APP_DATABASE_USER", "__APP_SLUG__") %>
-    password: <%= ENV["APP_DATABASE_PASSWORD"] %>
+    database: <%= ENV.fetch("DB_PRODUCTION_NAME", "__APP_SLUG___production") %>
+    username: <%= ENV.fetch("DB_USER", "__APP_SLUG__") %>
+    password: <%= ENV["DB_PASSWORD"] %>
   cache:
     <<: *primary_production
     database: __APP_SLUG___production_cache

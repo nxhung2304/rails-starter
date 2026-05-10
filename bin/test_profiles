@@ -1,0 +1,125 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require "fileutils"
+require "open3"
+
+BIN_NEW    = File.expand_path("new", __dir__)
+NO_BROWSER = ARGV.include?("--no-browser")
+STAMP      = Time.now.strftime("%Y%m%d%H%M%S")
+
+PROFILES = [
+  { name: "api",      choice: "1", browser: false },
+  { name: "web",      choice: "2", browser: true  },
+  { name: "web_auth", choice: "3", browser: true  }
+].freeze
+
+def run(cmd, env: {}, dir: nil, input: nil)
+  opts = { stdin_data: input.to_s }
+  opts[:chdir] = dir if dir
+  stdout, stderr, status = Open3.capture3(env, cmd, opts)
+  [status.success?, stdout, stderr]
+end
+
+def step(label)
+  print "  #{label.ljust(22)}"
+  $stdout.flush
+  ok, out, err = yield
+  puts ok ? "OK" : "FAIL"
+  unless ok
+    [out, err].each do |s|
+      next if s.nil? || s.strip.empty?
+      s.strip.each_line { |l| puts "      #{l}" }
+    end
+  end
+  ok
+end
+
+results = {}
+
+PROFILES.each do |profile|
+  name   = profile[:name]
+  choice = profile[:choice]
+  app    = "test_#{name}_#{STAMP}"
+  path   = File.join("/tmp", app)
+
+  puts "\n#{"=" * 52}"
+  puts "  Profile: #{name}"
+  puts "=" * 52
+
+  steps = {}
+
+  env = {
+    "RAILS_ENV"              => "test",
+    "DATABASE_URL"           => ENV.fetch("DATABASE_URL", "postgres://localhost"),
+    "APP_DATABASE_TEST_NAME" => "#{app}_test"
+  }
+
+  begin
+    steps[:generate] = step("1. generate") do
+      run("ruby #{BIN_NEW} #{path}", input: "#{choice}\n")
+    end
+
+    unless steps[:generate]
+      results[name] = steps
+      next
+    end
+
+    steps[:bundle] = step("2. bundle install") do
+      run("bundle install --quiet", env: env, dir: path)
+    end
+
+    unless steps[:bundle]
+      results[name] = steps
+      next
+    end
+
+    steps[:db] = step("3. db:prepare") do
+      run("bundle exec rails db:prepare", env: env, dir: path)
+    end
+
+    unless steps[:db]
+      results[name] = steps
+      next
+    end
+
+    steps[:test] = step("4. rails test") do
+      run("bundle exec rails test", env: env, dir: path)
+    end
+
+    steps[:rubocop] = step("5. rubocop") do
+      run("bundle exec rubocop --no-server -f simple", env: env, dir: path)
+    end
+
+    if !NO_BROWSER && profile[:browser]
+      steps[:system] = step("6. rails test:system") do
+        run("bundle exec rails test:system", env: env, dir: path)
+      end
+    end
+
+    run("bundle exec rails db:drop", env: env, dir: path)
+  ensure
+    FileUtils.rm_rf(path)
+  end
+
+  results[name] = steps
+end
+
+puts "\n#{"=" * 52}"
+puts "  SUMMARY"
+puts "=" * 52
+
+all_pass = true
+
+results.each do |name, steps|
+  pass = steps.values.all?
+  all_pass &&= pass
+  puts "\n  #{name.ljust(12)} #{pass ? "PASS" : "FAIL"}"
+  steps.each do |label, ok|
+    puts "    [#{ok ? "v" : "x"}] #{label}"
+  end
+end
+
+puts
+
+exit(all_pass ? 0 : 1)

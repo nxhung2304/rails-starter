@@ -10,6 +10,8 @@ fi
 
 bin/rails log:clear tmp:clear
 
+bundle exec rails --tasks 2>/dev/null | grep -q "tailwindcss:build" && bin/rails tailwindcss:build
+
 if [[ "${1:-}" != "--skip-server" ]]; then
   exec bin/dev
 fi

@@ -6,7 +6,7 @@ gem "discard"
 gem "dotenv-rails"
 gem "image_processing", "~> 1.2"
 gem "importmap-rails"
-gem "paper_trail"
+gem "propshaft"
 gem "pagy", "~> 9.3"
 gem "pg", "~> 1.1"
 gem "puma", ">= 5.0"
@@ -29,7 +29,7 @@ group :development do
 end
 
 group :development, :test do
-  gem "annotaterb"
+  gem "annotate"
   gem "brakeman", require: false
   gem "bundler-audit", require: false
   gem "capybara"

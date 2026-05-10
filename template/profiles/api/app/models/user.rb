@@ -1,3 +1,3 @@
 class User < ApplicationRecord
-  has_paper_trail
+  validates :email, presence: true, uniqueness: true
 end

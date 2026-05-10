@@ -13,11 +13,4 @@ class UserTest < ActiveSupport::TestCase
     create(:user, email: "dup@example.com")
     assert_not build(:user, email: "dup@example.com").valid?
   end
-
-  test "paper_trail creates version on update" do
-    user = create(:user)
-    assert_difference "PaperTrail::Version.count" do
-      user.update!(name: "Updated")
-    end
-  end
 end

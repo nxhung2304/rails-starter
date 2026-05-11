@@ -15,7 +15,7 @@ A permanent template tool for bootstrapping new Rails apps. Keep it in one place
 Clone `rails-starter` once to a permanent location:
 
 ```bash
-git clone https://github.com/nxhung2304/rails-starter ~/Dev/personal/rails-starter
+git clone https://github.com/nxhung2304/rails-starter ~/rails-starter
 ```
 
 ## Creating a New Project
@@ -23,22 +23,21 @@ git clone https://github.com/nxhung2304/rails-starter ~/Dev/personal/rails-start
 **Option 1 — from rails-starter directly**
 
 ```bash
-cd ~/Dev/personal/rails-starter
-make new APP=~/Dev/personal/todo-api
-# or: ruby bin/new ~/Dev/personal/todo-api
+cd ~/rails-starter
+make new APP=~/todo-api
+# or: ruby bin/new ~/todo-api
 ```
 
 **Option 2 — from anywhere using the script**
 
 ```bash
-cd ~/Dev/personal
-ruby ~/Dev/personal/rails-starter/bin/new todo-api
+ruby ~/rails-starter/bin/new ~/todo-api
 ```
 
 **Option 3 — via curl (clones rails-starter automatically if not present)**
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/nxhung2304/rails-starter/main/install.sh | bash -s todo-api ~/Dev/personal
+curl -fsSL https://raw.githubusercontent.com/nxhung2304/rails-starter/main/install.sh | bash -s todo-api ~/
 ```
 
 All three approaches ask you to pick a profile:
@@ -54,7 +53,7 @@ Creating todo-api (profile: api)...
 Done.
 
 Next steps:
-  cd ~/Dev/personal/todo-api
+  cd todo-api
   cp .envrc.example .envrc && direnv allow
   bin/setup
   bin/dev
@@ -65,7 +64,7 @@ The app name is derived from the folder name (`todo-api` → module `TodoApi`, s
 ## First Run in the New Project
 
 ```bash
-cd ~/Dev/personal/todo-api
+cd ~/todo-api
 cp .envrc.example .envrc    # fill in DATABASE_URL, REDIS_URL, etc.
 direnv allow                # load env vars into your shell
 bin/setup                   # bundle install + db:prepare
@@ -102,7 +101,7 @@ make audit     # run bundler-audit
 Since `rails-starter` is a permanent local tool, pull updates at any time:
 
 ```bash
-cd ~/Dev/personal/rails-starter
+cd ~/rails-starter
 git pull
 ```
 

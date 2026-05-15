@@ -94,7 +94,12 @@ def check_generators(profile_name, path, env)
     errors = []
 
     checks.each do |check|
-      _ok, out, err = run(check[:cmd], env: env, dir: path)
+      ok, out, err = run(check[:check_cmd] || check[:cmd], env: env, dir: path)
+
+      unless ok
+        errors << "Generator failed: #{check[:cmd]}\nSTDOUT: #{out}\nSTDERR: #{err}"
+        next
+      end
 
       check[:files].each do |rel|
         full = File.join(path, rel)

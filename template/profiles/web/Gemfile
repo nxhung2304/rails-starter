@@ -27,7 +27,7 @@ group :development do
 end
 
 group :development, :test do
-  gem "annotate"
+  gem "annotaterb"
   gem "brakeman", require: false
   gem "bundler-audit", require: false
   gem "capybara"

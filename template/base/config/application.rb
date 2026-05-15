@@ -9,7 +9,7 @@ Bundler.require(*Rails.groups)
 module __APP_MODULE__
   class Application < Rails::Application
     config.load_defaults 8.1
-    config.autoload_lib(ignore: %w[assets tasks])
+    config.autoload_lib(ignore: %w[assets tasks generators templates])
 
     config.generators do |g|
       g.test_framework  :test_unit, fixture: false

@@ -2,6 +2,7 @@ source "https://rubygems.org"
 
 gem "bootsnap", require: false
 gem "devise"
+gem "rolify"
 gem "discard"
 gem "image_processing", "~> 1.2"
 gem "importmap-rails"

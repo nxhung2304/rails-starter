@@ -8,7 +8,7 @@
     </h1>
     <%%= link_to t("helpers.links.new", model: <%= resource_class %>.model_name.human, default: "New <%= resource_class %>"),
           new_<%= resource_name %>_path,
-          class: "rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700" %>
+          class: "rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700" %>
     <%%#= link_to t("helpers.links.new", model: <%= resource_class %>.model_name.human), new_<%= resource_name %>_path if can?(:create, <%= resource_class %>) %>
   </div>
 
@@ -18,7 +18,7 @@
             placeholder: t("helpers.search.placeholder", default: "Search..."),
             class: "flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900" %>
       <%%= f.submit t("helpers.search.submit", default: "Search"),
-            class: "rounded-lg bg-slate-100 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-200" %>
+            class: "cursor-pointer rounded-lg bg-slate-100 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-200" %>
     </div>
   <%% end %>
 
@@ -26,7 +26,7 @@
     <table class="w-full text-sm">
       <thead class="bg-slate-50">
         <tr>
-          <%% <%= resource_class %>.column_names.each do |col| %>
+          <%% <%= resource_class %>.displayable_columns.each do |col| %>
             <th class="px-4 py-3 text-left font-medium text-slate-600"><%%= <%= resource_class %>.human_attribute_name(col) %></th>
           <%% end %>
           <th class="px-4 py-3"></th>
@@ -35,16 +35,22 @@
       <tbody class="divide-y divide-slate-200">
         <%% @<%= file_name %>.each do |<%= resource_name %>| %>
           <tr class="hover:bg-slate-50">
-            <%% <%= resource_class %>.column_names.each do |col| %>
-              <td class="px-4 py-3 text-slate-700"><%%= <%= resource_name %>.public_send(col) %></td>
+            <%% <%= resource_class %>.displayable_columns.each do |col| %>
+              <td class="px-4 py-3 text-slate-700">
+                <%% if col == "status" %>
+                  <%%= render "shared/status_badge", status: <%= resource_name %>.status %>
+                <%% else %>
+                  <%%= <%= resource_name %>.public_send(col) %>
+                <%% end %>
+              </td>
             <%% end %>
             <td class="px-4 py-3 text-right">
               <%%= link_to t("helpers.links.show", default: "Show"),
                     <%= resource_name %>_path(<%= resource_name %>),
-                    class: "text-slate-500 hover:text-slate-900 mr-3" %>
+                    class: "rounded-md border border-slate-300 px-4 py-1.5 text-xs font-medium text-slate-600 hover:border-slate-900 hover:text-slate-900 mr-2" %>
               <%%= link_to t("helpers.links.edit", default: "Edit"),
                     edit_<%= resource_name %>_path(<%= resource_name %>),
-                    class: "text-slate-500 hover:text-slate-900" %>
+                    class: "rounded-md border border-slate-300 px-4 py-1.5 text-xs font-medium text-slate-600 hover:border-slate-900 hover:text-slate-900" %>
             </td>
           </tr>
         <%% end %>
@@ -66,10 +72,22 @@
   </div>
 
   <dl class="divide-y divide-slate-200 rounded-xl border border-slate-200">
-    <%% @<%= resource_name %>.class.column_names.each do |col| %>
+    <%% @<%= resource_name %>.class.displayable_columns.each do |col| %>
       <div class="flex px-4 py-3 gap-4">
         <dt class="w-1/3 font-medium text-slate-600"><%%= <%= resource_class %>.human_attribute_name(col) %></dt>
-        <dd class="text-slate-900"><%%= @<%= resource_name %>.public_send(col) %></dd>
+        <dd class="text-slate-900">
+          <%% if col == "status" %>
+            <%%= render "shared/status_badge", status: @<%= resource_name %>.status %>
+          <%% else %>
+            <%%= @<%= resource_name %>.public_send(col) %>
+          <%% end %>
+        </dd>
+      </div>
+    <%% end %>
+    <%% @<%= resource_name %>.class.timestamp_columns.each do |col| %>
+      <div class="flex px-4 py-3 gap-4">
+        <dt class="w-1/3 font-medium text-slate-600"><%%= <%= resource_class %>.human_attribute_name(col) %></dt>
+        <dd class="text-slate-500 text-sm"><%%= @<%= resource_name %>.public_send(col)&.strftime("%Y-%m-%d %H:%M") %></dd>
       </div>
     <%% end %>
   </dl>
@@ -81,14 +99,18 @@
   </h1>
 
   <%%= simple_form_for @<%= resource_name %> do |f| %>
-    <%% <%= resource_class %>.column_names.reject { |c| %w[id created_at updated_at].include?(c) }.each do |col| %>
-      <%%= f.input col.to_sym %>
+    <%% <%= resource_class %>.displayable_columns.each do |col| %>
+      <%% if <%= resource_class %>.defined_enums.key?(col) %>
+        <%%= f.input col.to_sym, as: :select, collection: <%= resource_class %>.defined_enums[col].keys, prompt: <%= resource_class %>.human_attribute_name(col) %>
+      <%% else %>
+        <%%= f.input col.to_sym %>
+      <%% end %>
     <%% end %>
 
     <div class="mt-6 flex items-center gap-3">
       <%%= f.button :submit,
             t("helpers.submit.create", model: <%= resource_class %>.model_name.human, default: "Create <%= resource_class %>"),
-            class: "rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700" %>
+            class: "rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700" %>
       <%%= link_to t("helpers.links.cancel", default: "Cancel"),
             <%= file_name %>_path,
             class: "text-sm text-slate-500 hover:text-slate-900" %>
@@ -101,17 +123,23 @@
     <h1 class="text-2xl font-bold text-slate-900">
       <%%= t("helpers.submit.update", model: <%= resource_class %>.model_name.human, default: "Edit <%= resource_class %>") %>
     </h1>
-    <%%= button_to t("helpers.links.delete", default: "Delete"),
-          <%= resource_name %>_path(@<%= resource_name %>),
-          method: :delete,
-          data: { turbo_confirm: t("helpers.confirm", default: "Are you sure?") },
-          class: "rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-100" %>
-    <%%#= button_to t("helpers.links.delete"), <%= resource_name %>_path(@<%= resource_name %>), method: :delete, if: can?(:destroy, @<%= resource_name %>) %>
+    <%% if !defined?(current_user) || @<%= resource_name %> != current_user %>
+      <%%= button_to t("helpers.links.delete", default: "Delete"),
+            <%= resource_name %>_path(@<%= resource_name %>),
+            method: :delete,
+            data: { turbo_confirm: t("helpers.confirm", default: "Are you sure?") },
+            class: "rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-100" %>
+      <%%#= button_to t("helpers.links.delete"), <%= resource_name %>_path(@<%= resource_name %>), method: :delete, if: can?(:destroy, @<%= resource_name %>) %>
+    <%% end %>
   </div>
 
   <%%= simple_form_for @<%= resource_name %> do |f| %>
-    <%% @<%= resource_name %>.class.column_names.reject { |c| %w[id created_at updated_at].include?(c) }.each do |col| %>
-      <%%= f.input col.to_sym %>
+    <%% @<%= resource_name %>.class.displayable_columns.each do |col| %>
+      <%% if @<%= resource_name %>.class.defined_enums.key?(col) %>
+        <%%= f.input col.to_sym, as: :select, collection: @<%= resource_name %>.class.defined_enums[col].keys, prompt: <%= resource_class %>.human_attribute_name(col) %>
+      <%% else %>
+        <%%= f.input col.to_sym %>
+      <%% end %>
     <%% end %>
 
     <div class="mt-6 flex items-center gap-3">

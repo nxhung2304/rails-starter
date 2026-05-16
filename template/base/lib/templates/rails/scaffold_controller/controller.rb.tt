@@ -4,7 +4,6 @@
 <% resource_class = class_name.demodulize.singularize -%>
 class <%= class_name %>Controller < ApplicationController
 <% if is_resource -%>
-  before_action :authenticate_user! if respond_to?(:authenticate_user!)
   # load_and_authorize_resource  # uncomment if using CanCanCan
   before_action :set_<%= resource_name %>, only: %i[<%= (actions & %w[show edit update destroy]).join(" ") %>]
 
@@ -35,7 +34,7 @@ class <%= class_name %>Controller < ApplicationController
 
     if @<%= resource_name %>.save
       flash[:success] = t("controller.created", text: <%= resource_class %>.model_name.human)
-      redirect_to <%= file_name %>_url
+      redirect_to @<%= resource_name %>
     else
       render :new, status: :unprocessable_entity
     end
@@ -46,7 +45,7 @@ class <%= class_name %>Controller < ApplicationController
   def update
     if @<%= resource_name %>.update(<%= resource_name %>_params)
       flash[:success] = t("controller.updated", text: <%= resource_class %>.model_name.human)
-      redirect_to <%= file_name %>_url
+      redirect_to @<%= resource_name %>
     else
       render :edit, status: :unprocessable_entity
     end
@@ -65,8 +64,6 @@ class <%= class_name %>Controller < ApplicationController
 
     def set_<%= resource_name %>
       @<%= resource_name %> = <%= resource_class %>.find(params[:id])
-    rescue ActiveRecord::RecordNotFound
-      redirect_to <%= file_name %>_url, alert: t("errors.not_found", default: "Record not found")
     end
 
 <% if (actions & %w[create update]).any? -%>

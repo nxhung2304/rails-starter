@@ -5,7 +5,6 @@
 class <%= class_name %>Controller < ApplicationController
 <% if is_resource -%>
   before_action :authenticate_user! if respond_to?(:authenticate_user!)
-  # load_and_authorize_resource  # uncomment if using CanCanCan
   before_action :set_<%= resource_name %>, only: %i[<%= (actions & %w[show edit update destroy]).join(" ") %>]
 
 <% if actions.include?("index") -%>
@@ -45,8 +44,6 @@ class <%= class_name %>Controller < ApplicationController
 <% if actions.include?("update") -%>
   def update
     account_params = update_params
-
-    # authorize! :update, @<%= resource_name %>, :roles if account_params[:role_ids].present?
 
     if @<%= resource_name %>.update(account_params)
       flash[:success] = t("controller.updated", text: "#{<%= resource_class %>.model_name.human} #{@<%= resource_name %>.try(:email) || @<%= resource_name %>.try(:name) || @<%= resource_name %>.id}")

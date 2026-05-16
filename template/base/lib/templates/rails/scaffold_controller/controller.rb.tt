@@ -34,7 +34,7 @@ class <%= class_name %>Controller < ApplicationController
     @<%= resource_name %> = <%= resource_class %>.new(<%= resource_name %>_params)
 
     if @<%= resource_name %>.save
-      flash[:success] = t("controller.created", text: "#{<%= resource_class %>.model_name.human} #{@<%= resource_name %>.try(:email) || @<%= resource_name %>.try(:name) || @<%= resource_name %>.id}")
+      flash[:success] = t("controller.created", text: <%= resource_class %>.model_name.human)
       redirect_to <%= file_name %>_url
     else
       render :new, status: :unprocessable_entity
@@ -44,32 +44,20 @@ class <%= class_name %>Controller < ApplicationController
 <% end -%>
 <% if actions.include?("update") -%>
   def update
-    account_params = update_params
-
-    # authorize! :update, @<%= resource_name %>, :roles if account_params[:role_ids].present?
-
-    if @<%= resource_name %>.update(account_params)
-      flash[:success] = t("controller.updated", text: "#{<%= resource_class %>.model_name.human} #{@<%= resource_name %>.try(:email) || @<%= resource_name %>.try(:name) || @<%= resource_name %>.id}")
-      if current_user.respond_to?(:has_role?) && current_user.has_role?(:admin)
-        redirect_to <%= file_name %>_url
-      else
-        redirect_to edit_<%= resource_name %>_path(@<%= resource_name %>)
-      end
+    if @<%= resource_name %>.update(<%= resource_name %>_params)
+      flash[:success] = t("controller.updated", text: <%= resource_class %>.model_name.human)
+      redirect_to <%= file_name %>_url
     else
-      render :new, status: :unprocessable_entity
+      render :edit, status: :unprocessable_entity
     end
   end
 
 <% end -%>
 <% if actions.include?("destroy") -%>
   def destroy
-    if @<%= resource_name %>.destroy
-      flash[:success] = t("controller.destroyed", text: "#{<%= resource_class %>.model_name.human} #{@<%= resource_name %>.try(:email) || @<%= resource_name %>.try(:name) || @<%= resource_name %>.id}")
-      redirect_to <%= file_name %>_url
-    else
-      flash[:error] = t("controller.destroy_fail", text: "#{<%= resource_class %>.model_name.human} #{@<%= resource_name %>.try(:email) || @<%= resource_name %>.try(:name) || @<%= resource_name %>.id}")
-      render :edit, status: :unprocessable_entity
-    end
+    @<%= resource_name %>.destroy
+    flash[:success] = t("controller.destroyed", text: <%= resource_class %>.model_name.human)
+    redirect_to <%= file_name %>_url
   end
 
 <% end -%>
@@ -77,22 +65,13 @@ class <%= class_name %>Controller < ApplicationController
 
     def set_<%= resource_name %>
       @<%= resource_name %> = <%= resource_class %>.find(params[:id])
+    rescue ActiveRecord::RecordNotFound
+      redirect_to <%= file_name %>_url, alert: t("errors.not_found", default: "Record not found")
     end
 
 <% if (actions & %w[create update]).any? -%>
-    def update_params
-      params = <%= resource_name %>_params
-      if params[:password].blank?
-        params = params.except(:password)
-        params = params.except(:password_confirmation) if params[:password_confirmation].blank?
-      end
-      params
-    end
-
     def <%= resource_name %>_params
-      params.require(:<%= resource_name %>).permit(
-        # TODO: list permitted attributes
-      )
+      params.require(:<%= resource_name %>).permit(<%= resource_class %>.displayable_columns.map(&:to_sym))
     end
 <% end -%>
 <% else -%>

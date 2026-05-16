@@ -42,12 +42,14 @@ gen-model:
 
 gen-controller:
 	@[ -n "$(NAME)" ] || (printf "Usage: make gen-controller NAME=<Name> [ACTIONS=\"action ...\"]\n"; exit 1)
-	@bin/rails generate controller $(NAME) $(ACTIONS)
+	@bin/rails generate controller $(NAME) $(ACTIONS) form
+	@ruby -e "d='$(NAME)'.gsub(/([A-Z]+)([A-Z][a-z])/,'\1_\2').gsub(/([a-z\d])([A-Z])/,'\1_\2').downcase; f=\"app/views/\#{d}/form.html.erb\"; File.rename(f, \"app/views/\#{d}/_form.html.erb\") if File.exist?(f)"
 	@bin/rails generate system_test $(NAME)
 
 gen-resource:
 	@[ -n "$(NAME)" ] || (printf "Usage: make gen-resource NAME=<Name> [FIELDS=\"col:type ...\"]\n"; exit 1)
 	@bin/rails generate resource $(NAME) $(FIELDS)
+	@ruby -e "d='$(NAME)'.gsub(/([A-Z]+)([A-Z][a-z])/,'\1_\2').gsub(/([a-z\d])([A-Z])/,'\1_\2').downcase; f=\"app/views/\#{d}/form.html.erb\"; File.rename(f, \"app/views/\#{d}/_form.html.erb\") if File.exist?(f)"
 	@bin/rails generate system_test $(NAME)
 
 gen-migration:

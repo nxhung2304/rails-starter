@@ -98,24 +98,7 @@
     <%%= t("helpers.submit.create", model: <%= resource_class %>.model_name.human, default: "New <%= resource_class %>") %>
   </h1>
 
-  <%%= simple_form_for @<%= resource_name %> do |f| %>
-    <%% <%= resource_class %>.displayable_columns.each do |col| %>
-      <%% if <%= resource_class %>.defined_enums.key?(col) %>
-        <%%= f.input col.to_sym, as: :select, collection: <%= resource_class %>.defined_enums[col].keys, prompt: <%= resource_class %>.human_attribute_name(col) %>
-      <%% else %>
-        <%%= f.input col.to_sym %>
-      <%% end %>
-    <%% end %>
-
-    <div class="mt-6 flex items-center gap-3">
-      <%%= f.button :submit,
-            t("helpers.submit.create", model: <%= resource_class %>.model_name.human, default: "Create <%= resource_class %>"),
-            class: "rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700" %>
-      <%%= link_to t("helpers.links.cancel", default: "Cancel"),
-            <%= file_name %>_path,
-            class: "text-sm text-slate-500 hover:text-slate-900" %>
-    </div>
-  <%% end %>
+  <%%= render "form", <%= resource_name %>: @<%= resource_name %> %>
 </section>
 <% elsif @action == "edit" -%>
 <section class="mx-auto max-w-2xl px-6 py-8">
@@ -133,25 +116,27 @@
     <%% end %>
   </div>
 
-  <%%= simple_form_for @<%= resource_name %> do |f| %>
-    <%% @<%= resource_name %>.class.displayable_columns.each do |col| %>
-      <%% if @<%= resource_name %>.class.defined_enums.key?(col) %>
-        <%%= f.input col.to_sym, as: :select, collection: @<%= resource_name %>.class.defined_enums[col].keys, prompt: <%= resource_class %>.human_attribute_name(col) %>
-      <%% else %>
-        <%%= f.input col.to_sym %>
-      <%% end %>
-    <%% end %>
-
-    <div class="mt-6 flex items-center gap-3">
-      <%%= f.button :submit,
-            t("helpers.submit.update", model: <%= resource_class %>.model_name.human, default: "Update <%= resource_class %>"),
-            class: "rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700" %>
-      <%%= link_to t("helpers.links.cancel", default: "Cancel"),
-            <%= file_name %>_path,
-            class: "text-sm text-slate-500 hover:text-slate-900" %>
-    </div>
-  <%% end %>
+  <%%= render "form", <%= resource_name %>: @<%= resource_name %> %>
 </section>
+<% elsif @action == "form" -%>
+<%%= simple_form_for <%= resource_name %>, html: { autocomplete: "off" } do |f| %>
+  <%% <%= resource_name %>.class.displayable_columns.each do |col| %>
+    <%% if <%= resource_name %>.class.defined_enums.key?(col) %>
+      <%%= f.input col.to_sym, as: :select, collection: <%= resource_name %>.class.defined_enums[col].keys, prompt: <%= resource_class %>.human_attribute_name(col) %>
+    <%% else %>
+      <%%= f.input col.to_sym %>
+    <%% end %>
+  <%% end %>
+
+  <div class="mt-6 flex items-center gap-3">
+    <%%= f.button :submit,
+          t("helpers.submit.#{<%= resource_name %>.persisted? ? :update : :create}", model: <%= resource_class %>.model_name.human),
+          class: "rounded-lg #{<%= resource_name %>.persisted? ? "bg-slate-900 hover:bg-slate-700" : "bg-emerald-600 hover:bg-emerald-700"} px-4 py-2 text-sm font-medium text-white" %>
+    <%%= link_to t("helpers.links.cancel", default: "Cancel"),
+          <%= file_name %>_path,
+          class: "text-sm text-slate-500 hover:text-slate-900" %>
+  </div>
+<%% end %>
 <% else -%>
 <section class="mx-auto max-w-6xl px-6 py-8">
   <h1><%%= t(".title", default: "<%= @action.humanize %>") %></h1>

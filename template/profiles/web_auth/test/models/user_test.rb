@@ -13,4 +13,10 @@ class UserTest < ActiveSupport::TestCase
     create(:user, email: "dup@example.com")
     assert_not build(:user, email: "dup@example.com").valid?
   end
+
+  test "can assign roles" do
+    user = create(:user)
+    user.add_role(:admin)
+    assert user.has_role?(:admin)
+  end
 end

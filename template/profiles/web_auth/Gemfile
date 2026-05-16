@@ -2,6 +2,7 @@ source "https://rubygems.org"
 
 gem "bootsnap", require: false
 gem "devise"
+gem "cancancan"
 gem "rolify"
 gem "discard"
 gem "image_processing", "~> 1.2"
@@ -39,5 +40,6 @@ group :development, :test do
   gem "pry-rails"
   gem "rubocop-rails-omakase", require: false
   gem "selenium-webdriver"
+  gem "shoulda-context"
   gem "shoulda-matchers"
 end

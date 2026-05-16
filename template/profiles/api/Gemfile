@@ -1,6 +1,8 @@
 source "https://rubygems.org"
 
 gem "bootsnap", require: false
+gem "cancancan"
+gem "rolify"
 gem "discard"
 gem "grape"
 gem "grape-entity"
@@ -31,5 +33,6 @@ group :development, :test do
   gem "factory_bot_rails"
   gem "faker"
   gem "rubocop-rails-omakase", require: false
+  gem "shoulda-context"
   gem "shoulda-matchers"
 end

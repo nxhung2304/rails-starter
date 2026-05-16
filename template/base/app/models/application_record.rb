@@ -19,4 +19,8 @@ class ApplicationRecord < ActiveRecord::Base
   def self.displayable_columns
     column_names - RANSACK_DENYLIST - %w[id]
   end
+
+  def self.timestamp_columns
+    %w[created_at updated_at] & column_names
+  end
 end

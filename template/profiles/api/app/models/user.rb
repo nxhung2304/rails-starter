@@ -1,6 +1,8 @@
 class User < ApplicationRecord
   rolify
 
+  def to_s = name.presence || email
+
   validates :email, presence: true, uniqueness: true
 
   def self.ransackable_attributes(auth_object = nil)

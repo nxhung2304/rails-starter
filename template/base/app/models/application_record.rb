@@ -10,14 +10,30 @@ class ApplicationRecord < ActiveRecord::Base
     unconfirmed_email
     created_at
     updated_at
+    discarded_at
   ].freeze
 
   def self.ransackable_attributes(auth_object = nil)
     column_names - RANSACK_DENYLIST
   end
 
-  def self.displayable_columns
+  def self.form_columns
     column_names - RANSACK_DENYLIST - %w[id]
+  end
+
+  def self.visible_columns
+    form_columns.map do |col|
+      if col.end_with?("_id")
+        assoc_name = col.delete_suffix("_id").to_sym
+        reflect_on_association(assoc_name) ? assoc_name.to_s : col
+      else
+        col
+      end
+    end
+  end
+
+  def self.index_columns
+    visible_columns
   end
 
   def self.timestamp_columns

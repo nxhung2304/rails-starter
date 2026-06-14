@@ -1,17 +1,15 @@
 <% module_namespacing do -%>
+<% actions = (respond_to?(:actions) ? send(:actions) : nil) || %w[index show new edit create update destroy] -%>
 <% is_resource = file_name == file_name.pluralize || (actions & %w[create update destroy]).any? -%>
 <% resource_name  = file_name.singularize -%>
 <% resource_class = class_name.demodulize.singularize -%>
-class <%= class_name %>Controller < ApplicationController
+class <%= controller_class_name %>Controller < ApplicationController
 <% if is_resource -%>
-  # load_and_authorize_resource  # uncomment if using CanCanCan
-  before_action :set_<%= resource_name %>, only: %i[<%= (actions & %w[show edit update destroy]).join(" ") %>]
+  load_and_authorize_resource
+  include IndexableResource
 
 <% if actions.include?("index") -%>
-  def index
-    @q = <%= resource_class %>.ransack(params[:q])
-    @pagy, @<%= file_name %> = pagy(@q.result(distinct: true))
-  end
+  def index; end
 
 <% end -%>
 <% if actions.include?("show") -%>
@@ -19,9 +17,7 @@ class <%= class_name %>Controller < ApplicationController
 
 <% end -%>
 <% if actions.include?("new") -%>
-  def new
-    @<%= resource_name %> = <%= resource_class %>.new
-  end
+  def new; end
 
 <% end -%>
 <% if actions.include?("edit") -%>
@@ -30,10 +26,8 @@ class <%= class_name %>Controller < ApplicationController
 <% end -%>
 <% if actions.include?("create") -%>
   def create
-    @<%= resource_name %> = <%= resource_class %>.new(<%= resource_name %>_params)
-
     if @<%= resource_name %>.save
-      flash[:success] = t("controller.created", text: <%= resource_class %>.model_name.human)
+      flash[:success] = t("controller.created", text: <%= resource_name %>_message)
       redirect_to @<%= resource_name %>
     else
       render :new, status: :unprocessable_entity
@@ -44,7 +38,7 @@ class <%= class_name %>Controller < ApplicationController
 <% if actions.include?("update") -%>
   def update
     if @<%= resource_name %>.update(<%= resource_name %>_params)
-      flash[:success] = t("controller.updated", text: <%= resource_class %>.model_name.human)
+      flash[:success] = t("controller.updated", text: <%= resource_name %>_message)
       redirect_to @<%= resource_name %>
     else
       render :edit, status: :unprocessable_entity
@@ -54,21 +48,25 @@ class <%= class_name %>Controller < ApplicationController
 <% end -%>
 <% if actions.include?("destroy") -%>
   def destroy
-    @<%= resource_name %>.destroy
-    flash[:success] = t("controller.destroyed", text: <%= resource_class %>.model_name.human)
-    redirect_to <%= file_name %>_url
+    if @<%= resource_name %>.discard
+      flash[:success] = t("controller.destroyed", text: <%= resource_name %>_message)
+      redirect_to <%= file_name %>_url
+    else
+      render :edit, status: :unprocessable_entity
+    end
   end
 
 <% end -%>
   private
 
-    def set_<%= resource_name %>
-      @<%= resource_name %> = <%= resource_class %>.find(params[:id])
-    end
-
 <% if (actions & %w[create update]).any? -%>
     def <%= resource_name %>_params
-      params.require(:<%= resource_name %>).permit(<%= resource_class %>.displayable_columns.map(&:to_sym))
+      params.require(:<%= resource_name %>).permit(<%= resource_class %>.form_columns.map(&:to_sym))
+    end
+
+<% end -%>
+    def <%= resource_name %>_message
+      <%= resource_class %>.model_name.human + " " + @<%= resource_name %>.to_s
     end
 <% end -%>
 <% else -%>

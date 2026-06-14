@@ -26,7 +26,7 @@
     <table class="w-full text-sm">
       <thead class="bg-slate-50">
         <tr>
-          <%% <%= resource_class %>.displayable_columns.each do |col| %>
+          <%% <%= resource_class %>.index_columns.each do |col| %>
             <th class="px-4 py-3 text-left font-medium text-slate-600"><%%= <%= resource_class %>.human_attribute_name(col) %></th>
           <%% end %>
           <th class="px-4 py-3"></th>
@@ -35,7 +35,7 @@
       <tbody class="divide-y divide-slate-200">
         <%% @<%= file_name %>.each do |<%= resource_name %>| %>
           <tr class="hover:bg-slate-50">
-            <%% <%= resource_class %>.displayable_columns.each do |col| %>
+            <%% <%= resource_class %>.index_columns.each do |col| %>
               <td class="px-4 py-3 text-slate-700">
                 <%% if col == "status" %>
                   <%%= render "shared/status_badge", status: <%= resource_name %>.status %>
@@ -72,7 +72,7 @@
   </div>
 
   <dl class="divide-y divide-slate-200 rounded-xl border border-slate-200">
-    <%% @<%= resource_name %>.class.displayable_columns.each do |col| %>
+    <%% @<%= resource_name %>.class.visible_columns.each do |col| %>
       <div class="flex px-4 py-3 gap-4">
         <dt class="w-1/3 font-medium text-slate-600"><%%= <%= resource_class %>.human_attribute_name(col) %></dt>
         <dd class="text-slate-900">
@@ -120,8 +120,13 @@
 </section>
 <% elsif @action == "form" -%>
 <%%= simple_form_for <%= resource_name %>, html: { autocomplete: "off" } do |f| %>
-  <%% <%= resource_name %>.class.displayable_columns.each do |col| %>
-    <%% if <%= resource_name %>.class.defined_enums.key?(col) %>
+  <%% <%= resource_name %>.class.form_columns.each do |col| %>
+    <%% if col.end_with?("_id") && (reflection = <%= resource_name %>.class.reflect_on_association(col.delete_suffix("_id").to_sym)) %>
+      <%%= f.input col.to_sym, as: :select,
+            collection: reflection.klass.all.map { |r| [r.to_s, r.id] },
+            include_blank: false,
+            input_html: { class: "bg-white text-slate-900" } %>
+    <%% elsif <%= resource_name %>.class.defined_enums.key?(col) %>
       <%%= f.input col.to_sym, as: :select, collection: <%= resource_name %>.class.defined_enums[col].keys, prompt: <%= resource_class %>.human_attribute_name(col) %>
     <%% else %>
       <%%= f.input col.to_sym %>
